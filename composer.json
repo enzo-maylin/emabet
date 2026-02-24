@@ -11,6 +11,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6",
         "firebase/php-jwt": "^7.0",
+        "lexik/jwt-authentication-bundle": "^3.2",
         "symfony/config": "7.4.*",
         "symfony/console": "7.4.*",
         "symfony/dependency-injection": "7.4.*",
@@ -21,7 +22,10 @@
         "symfony/routing": "7.4.*",
         "symfony/runtime": "7.4.*",
         "symfony/security-bundle": "7.4.*",
-        "symfony/yaml": "7.4.*"
+        "symfony/twig-bundle": "7.4.*",
+        "symfony/yaml": "7.4.*",
+        "twig/extra-bundle": "^2.12|^3.0",
+        "twig/twig": "^2.12|^3.0"
     },
     "config": {
         "allow-plugins": {
