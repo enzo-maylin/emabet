@@ -4,12 +4,11 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -22,13 +21,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\Column]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $loginCode = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $loginCodeExpiresAt = null;
-
-    //private ?string $password = null;
 
     public function getId(): ?int
     {
@@ -79,31 +76,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-
-     public function getPassword(): ?string
+    public function getLoginCode(): ?string
     {
-        return $this->password;
+        return $this->loginCode;
     }
 
-    public function setPassword(string $password): static
+    public function setLoginCode(?string $loginCode): static
     {
-        $this->password = $password;
+        $this->loginCode = $loginCode;
 
         return $this;
     }
 
-
-    public function __serialize(): array
+    public function getLoginCodeExpiresAt(): ?\DateTimeImmutable
     {
-        $data = (array) $this;
-        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
-
-        return $data;
+        return $this->loginCodeExpiresAt;
     }
 
-    #[\Deprecated]
+    public function setLoginCodeExpiresAt(?\DateTimeImmutable $loginCodeExpiresAt): static
+    {
+        $this->loginCodeExpiresAt = $loginCodeExpiresAt;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
     public function eraseCredentials(): void
     {
-        // @deprecated, to be removed when upgrading to Symfony 8
+        // Si tu stockes des données temporaires et sensibles sur l'utilisateur,
+        // tu peux les effacer ici. Dans ton cas, ce n'est pas nécessaire de la remplir.
     }
 }
