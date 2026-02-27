@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\LoginCodeService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mime\Address;
 
 #[Route('/api/auth', name: 'api_auth_')]
 class UserController extends AbstractController
@@ -23,7 +25,9 @@ class UserController extends AbstractController
         Request $request,
         UserRepository $userRepository,
         LoginCodeService $loginCodeService,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        EntityManagerInterface $entityManager,
+        string $mailerFrom
     ): JsonResponse {
         // On récupère les données JSON de la requête
         $data = $request->toArray();
@@ -35,21 +39,24 @@ class UserController extends AbstractController
 
         $user = $userRepository->findOneBy(['email' => $emailAddress]);
 
-        // Pour des raisons de sécurité (éviter la fuite d'informations), 
-        // on renvoie toujours un succès même si l'utilisateur n'existe pas.
-        if ($user) {
-            // 1. Générer le code
-            $code = $loginCodeService->generateAndSaveCode($user);
-
-            // 2. Envoyer l'email
-            $email = (new Email())
-                ->from('noreply@tonprojet.com')
-                ->to($user->getEmail())
-                ->subject('Ton code de connexion')
-                ->text("Voici ton code de connexion temporaire : $code. Il expire dans 15 minutes.");
-
-            $mailer->send($email);
+        // Si l'utilisateur n'existe pas, on le crée
+        if (!$user) {
+            $user = new User();
+            $user->setEmail($emailAddress);
+            $entityManager->persist($user);
         }
+
+        // 1. Générer le code
+        $code = $loginCodeService->generateAndSaveCode($user);
+
+        // 2. Envoyer l'email
+        $email = (new Email())
+            ->from(new Address($mailerFrom, "EMA'Bet"))
+            ->to($user->getEmail())
+            ->subject('Ton code de connexion')
+            ->text("Voici ton code de connexion temporaire : $code. Il expire dans 15 minutes.");
+
+        $mailer->send($email);
 
         return $this->json([
             'message' => 'Si un compte existe avec cet email, un code a été envoyé.'
