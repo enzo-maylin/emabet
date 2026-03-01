@@ -7,13 +7,13 @@ use App\Repository\UserRepository;
 use App\Service\LoginCodeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Mime\Address;
 
 #[Route('/api/auth', name: 'api_auth_')]
@@ -50,16 +50,20 @@ class UserController extends AbstractController
         $code = $loginCodeService->generateAndSaveCode($user);
 
         // 2. Envoyer l'email
-        $email = (new Email())
+        $email = (new TemplatedEmail())
             ->from(new Address($mailerFrom, "EMA'Bet"))
             ->to($user->getEmail())
-            ->subject('Ton code de connexion')
-            ->text("Voici ton code de connexion temporaire : $code. Il expire dans 15 minutes.");
+            ->subject("Ton code de connexion EMA'Bet")
+            ->htmlTemplate('emails/login_code.html.twig')
+            ->context([
+                'code' => $code,
+                'expiration_minutes' => 15,
+            ]);
 
         $mailer->send($email);
 
         return $this->json([
-            'message' => 'Si un compte existe avec cet email, un code a été envoyé.'
+            'message' => 'Un code a été envoyé.'
         ]);
     }
 
